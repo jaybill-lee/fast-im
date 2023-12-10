@@ -1,17 +1,11 @@
-package org.jaybill.fast.im.connector.netty;
+package org.jaybill.fast.im.connector.netty.ws;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
-import org.jaybill.fast.im.connector.constant.BaseConst;
-import org.jaybill.fast.im.connector.netty.dto.WsDataDTO;
-import org.jaybill.fast.im.connector.service.UserService;
-import org.jaybill.fast.im.common.util.JsonUtil;
 
-import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 
 @Slf4j

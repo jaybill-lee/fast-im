@@ -19,7 +19,7 @@ public class JwtUtilTest {
         var token = JwtUtil.createToken(bizId,  userId, PlatformEnum.Web, null);
         log.info("token = {}", token);
         var claims = JwtUtil.parseToken(token);
-        var actualBizId = claims.get(BaseConst.BIZ_ID, String.class);
+        var actualBizId = claims.getAudience().stream().toList().get(0);
         Assert.assertEquals(bizId, actualBizId);
         var actualUserId = claims.get(BaseConst.USER_ID, String.class);
         Assert.assertEquals(userId, actualUserId);

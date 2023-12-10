@@ -28,11 +28,10 @@ public class JwtUtil {
         return Jwts.builder()
                 .id(IdUtil.getUuid())
                 .issuer(ISSUER)
-                .audience().add("ws-login").and()
+                .audience().add(bizId).and()
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 2))
                 .signWith(SignatureAlgorithm.HS256, BASE64_SECRET)
-                .claim(BaseConst.BIZ_ID, bizId)
                 .claim(BaseConst.USER_ID, userId)
                 .claim(BaseConst.PLATFORM, platform.name())
                 .claim(BaseConst.TAGS, tags)
@@ -40,9 +39,10 @@ public class JwtUtil {
     }
 
     /**
+     * It would parse the header and the payload of JWT, then validate the signature. <br/>
+     * If the token is expired or the signature validate fail, it will throw exception. <br/>
      * @return contains:<br/>
-     * 1. bizId: xxx <br/>
-     * 2. tags: {k1:v1, k2:v2} <br/>
+     * @see JwtUtil#createToken(String, String, PlatformEnum, List)
      */
     public static Claims parseToken(String token) {
         if (token.startsWith(BEARER)) {

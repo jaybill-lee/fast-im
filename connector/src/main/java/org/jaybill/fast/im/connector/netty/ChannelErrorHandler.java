@@ -10,11 +10,11 @@ import org.jaybill.fast.im.connector.util.TcpUtil;
  * Netty websocket global exception handler;
  */
 @Slf4j
-public class WebSocketErrorHandler extends ChannelHandlerAdapter {
+public class ChannelErrorHandler extends ChannelHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.error("ws occur err:", cause);
+        log.error("connection occur err:", cause);
         if (cause instanceof NullPointerException) {
             TcpUtil.rst(ctx);
             return;

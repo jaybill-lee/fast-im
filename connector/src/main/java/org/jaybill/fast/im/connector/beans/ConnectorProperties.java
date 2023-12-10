@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
 public class ConnectorProperties {
 
     /**
-     * tcp port
-     */
-    private int port;
-
-    /**
      * http port
      */
     private int httpPort;
+
+    /**
+     * tcp port
+     */
+    private int port;
 }

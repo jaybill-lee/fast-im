@@ -12,8 +12,7 @@ import io.netty.util.AsciiString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jaybill.fast.im.common.util.AssertUtil;
-import org.jaybill.fast.im.connector.netty.http.H2cUpgradeEvt;
-import org.jaybill.fast.im.connector.netty.http.HelloWorldHttp2HandlerBuilder;
+import org.jaybill.fast.im.connector.netty.http.*;
 import org.jaybill.fast.im.connector.netty.ws.WebSocketUpgradeConfig;
 import org.jaybill.fast.im.connector.util.TcpUtil;
 
@@ -34,13 +33,15 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
 
     private boolean upgrading;
     private final WebSocketUpgradeConfig wsConfig;
+    private final HttpConfig httpConfig;
 
-    public HttpMultiProtocolUpgradeHandler(WebSocketUpgradeConfig wsConfig) {
+    public HttpMultiProtocolUpgradeHandler(WebSocketUpgradeConfig wsConfig, HttpConfig httpConfig) {
         AssertUtil.notNull(wsConfig);
         this.wsConfig = wsConfig;
         if (!this.wsConfig.getPath().startsWith("/")) {
             this.wsConfig.setPath("/" + this.wsConfig.getPath());
         }
+        this.httpConfig = httpConfig;
     }
 
     @Override
@@ -61,13 +62,16 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
         if (req.uri().equals(wsConfig.getPath())) {
             // Try to handle websocket handshake.
             this.upgradeWebsocket(ctx, req);
-        } else if (req.headers().contains(HttpHeaderNames.UPGRADE,
-                Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, true)) {
+        } else if (verifyUpgradeH2cHeaders(req)) {
             // Try to handle HTTP2 (h2c) handshake
             if (!this.upgradeH2c(ctx, req)) {
+                // Http 1.1
+                this.httpConfig.getDispatcher().service(Http1Request.adapt(req), Http1Response.adapt(ctx));
                 ctx.fireChannelRead(req.retain());
             }
         } else {
+            // Http 1.1
+            this.httpConfig.getDispatcher().service(Http1Request.adapt(req), Http1Response.adapt(ctx));
             ctx.fireChannelRead(req.retain());
         }
     }
@@ -87,13 +91,7 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
     private void upgradeWebsocket(ChannelHandlerContext ctx, FullHttpRequest req) {
         var interceptor = wsConfig.getInterceptor();
         if (wsConfig.getInterceptor() != null) {
-            // We need to retain the msg, because the whenComplete() will be async exec,
-            // then the super-class will release the msg if we not retain the msg.
-            req.retain();
-            // copy the FullHttpRequest to a new ByteBuf, prevent that memory leak.
-            var copyReq = req.copy();
-            interceptor.before(ctx, copyReq).whenComplete((r, e) -> {
-                copyReq.release(); // remember to release it
+            interceptor.before(ctx, req).whenComplete((r, e) -> {
                 if (e != null) {
                     TcpUtil.rst(ctx);
                 } else {
@@ -109,9 +107,48 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
         }
     }
 
+    private boolean verifyUpgradeH2cHeaders(FullHttpRequest request) {
+        List<CharSequence> requestedProtocols = splitHeader(request.headers().get(HttpHeaderNames.UPGRADE));
+        CharSequence upgradeProtocol = null;
+        for (CharSequence p : requestedProtocols) {
+            if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, p)) {
+                upgradeProtocol = p;
+                break;
+            }
+        }
+        if (upgradeProtocol == null) {
+            // None of the requested protocols are supported, don't upgrade.
+            return false;
+        }
+
+        // Make sure the CONNECTION header is present.
+        List<String> connectionHeaderValues = request.headers().getAll(HttpHeaderNames.CONNECTION);
+        if (CollectionUtils.isEmpty(connectionHeaderValues)) {
+            return false;
+        }
+        String concatenatedConnectionValue = String.join(String.valueOf(COMMA), connectionHeaderValues);
+
+        // Make sure the CONNECTION header contains UPGRADE as well as all protocol-specific headers.
+        Collection<CharSequence> requiredHeaders = Collections.singletonList(HTTP_UPGRADE_SETTINGS_HEADER);
+        List<CharSequence> values = splitHeader(concatenatedConnectionValue);
+        if (!containsContentEqualsIgnoreCase(values, HttpHeaderNames.UPGRADE) ||
+                !containsAllContentEqualsIgnoreCase(values, requiredHeaders)) {
+            return false;
+        }
+
+        // Ensure that all required protocol-specific headers are found in the request.
+        for (CharSequence requiredHeader : requiredHeaders) {
+            if (!request.headers().contains(requiredHeader)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // After upgrade successfully, the pipeline would be:
+    // Head -> WebSocketFrameEncoder -> WebSocketFrameDecoder -> WebSocketFrameHandler -> ChannelErrorHandler -> Tail
     private void upgradeWebsocket0(ChannelHandlerContext ctx, FullHttpRequest req) {
-        // After upgrade successfully, the pipeline would be:
-        // Head -> WebSocketFrameEncoder -> WebSocketFrameDecoder -> WebSocketFrameHandler -> ChannelErrorHandler -> Tail
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
                 getWebSocketLocation(req, wsConfig.getPath()),
                 null,
@@ -132,54 +169,17 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
                 ctx.pipeline().remove(this);
             } else {
                 log.debug("WebSocket handshake fail, e:", future.cause());
+                TcpUtil.rst(ctx);
             }
         });
     }
 
+    // After upgrade successfully, the pipeline would be:
+    // Head -> Http2ConnectionHandler -> ChannelErrorHandler -> Tail
     private boolean upgradeH2c(final ChannelHandlerContext ctx, final FullHttpRequest request) {
-        // After upgrade successfully, the pipeline would be:
-        // Head -> Http2ConnectionHandler -> ChannelErrorHandler -> Tail
-        List<CharSequence> requestedProtocols = splitHeader(request.headers().get(HttpHeaderNames.UPGRADE));
-        HttpServerUpgradeHandler.UpgradeCodec upgradeCodec = null;
-        CharSequence upgradeProtocol = null;
-        for (CharSequence p : requestedProtocols) {
-            if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, p)) {
-                upgradeCodec = new Http2ServerUpgradeCodec(new HelloWorldHttp2HandlerBuilder().build());
-                upgradeProtocol = p;
-                break;
-            }
-        }
-        if (upgradeCodec == null) {
-            // None of the requested protocols are supported, don't upgrade.
-            return false;
-        }
-
-        // Make sure the CONNECTION header is present.
-        List<String> connectionHeaderValues = request.headers().getAll(HttpHeaderNames.CONNECTION);
-        if (connectionHeaderValues == null || connectionHeaderValues.isEmpty()) {
-            return false;
-        }
-
-        StringBuilder concatenatedConnectionValue = new StringBuilder(connectionHeaderValues.size() * 10);
-        for (CharSequence connectionHeaderValue : connectionHeaderValues) {
-            concatenatedConnectionValue.append(connectionHeaderValue).append(COMMA);
-        }
-        concatenatedConnectionValue.setLength(concatenatedConnectionValue.length() - 1);
-
-        // Make sure the CONNECTION header contains UPGRADE as well as all protocol-specific headers.
-        Collection<CharSequence> requiredHeaders = Collections.singletonList(HTTP_UPGRADE_SETTINGS_HEADER);
-        List<CharSequence> values = splitHeader(concatenatedConnectionValue);
-        if (!containsContentEqualsIgnoreCase(values, HttpHeaderNames.UPGRADE) ||
-                !containsAllContentEqualsIgnoreCase(values, requiredHeaders)) {
-            return false;
-        }
-
-        // Ensure that all required protocol-specific headers are found in the request.
-        for (CharSequence requiredHeader : requiredHeaders) {
-            if (!request.headers().contains(requiredHeader)) {
-                return false;
-            }
-        }
+        CharSequence upgradeProtocol = Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME;
+        HttpServerUpgradeHandler.UpgradeCodec upgradeCodec = new Http2ServerUpgradeCodec(
+                new DefaultHttp2ConnectionHandlerBuilder(httpConfig.getDispatcher()).build());
 
         // Prepare and send the upgrade response. Wait for this write to complete before upgrading,
         // since we need the old codec in-place to properly encode the response.
@@ -188,29 +188,26 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
             return false;
         }
 
-        final H2cUpgradeEvt event = new H2cUpgradeEvt(upgradeProtocol, request);
         // After writing the upgrade response we immediately prepare the
         // pipeline for the next protocol to avoid a race between completion
         // of the write future and receiving data before the pipeline is
         // restructured.
-        try {
-            this.upgrading = true;
-            final ChannelFuture writeComplete = ctx.writeAndFlush(upgradeResponse);
-            // Perform the upgrade to the new protocol.
-            ctx.pipeline().remove(HttpServerCodec.class);
-            upgradeCodec.upgradeTo(ctx, request);
-            ctx.pipeline().remove(this);
-            ctx.pipeline().remove(HttpObjectAggregator.class);
+        this.upgrading = true;
+        final ChannelFuture writeComplete = ctx.writeAndFlush(upgradeResponse);
+        // Perform the upgrade to the new protocol.
+        ctx.pipeline().remove(HttpServerCodec.class);
+        upgradeCodec.upgradeTo(ctx, request);
+        ctx.pipeline().remove(this);
+        ctx.pipeline().remove(HttpObjectAggregator.class);
 
-            ctx.fireUserEventTriggered(event);
+        // Notify the listener.
+        // Then listener can send the response of the handshake request through HTTP2.
+        ctx.fireUserEventTriggered(new H2cUpgradeEvt(upgradeProtocol, request));
 
-            // Add the listener last to avoid firing upgrade logic after
-            // the channel is already closed since the listener may fire
-            // immediately if the write failed eagerly.
-            writeComplete.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-        } finally {
-            // Release the event if the upgrade event wasn't fired.
-        }
+        // Add the listener last to avoid firing upgrade logic after
+        // the channel is already closed since the listener may fire
+        // immediately if to write failed eagerly.
+        writeComplete.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
         return true;
     }
 
@@ -220,6 +217,9 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
     }
 
     private static List<CharSequence> splitHeader(CharSequence header) {
+        if (header == null) {
+            return Collections.emptyList();
+        }
         final StringBuilder builder = new StringBuilder(header.length());
         final List<CharSequence> protocols = new ArrayList<CharSequence>(4);
         for (int i = 0; i < header.length(); ++i) {
@@ -238,7 +238,7 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
         }
 
         // Add the last protocol
-        if (builder.length() > 0) {
+        if (!builder.isEmpty()) {
             protocols.add(builder.toString());
         }
 

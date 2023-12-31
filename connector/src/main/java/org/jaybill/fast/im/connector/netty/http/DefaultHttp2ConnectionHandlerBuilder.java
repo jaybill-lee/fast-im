@@ -20,24 +20,27 @@ import io.netty.handler.codec.http2.*;
 
 import static io.netty.handler.logging.LogLevel.INFO;
 
-public final class HelloWorldHttp2HandlerBuilder
-        extends AbstractHttp2ConnectionHandlerBuilder<HelloWorldHttp2Handler, HelloWorldHttp2HandlerBuilder> {
+public final class DefaultHttp2ConnectionHandlerBuilder
+        extends AbstractHttp2ConnectionHandlerBuilder<DefaultHttp2ConnectionHandler, DefaultHttp2ConnectionHandlerBuilder> {
 
-    private static final Http2FrameLogger logger = new Http2FrameLogger(INFO, HelloWorldHttp2Handler.class);
+    private static final Http2FrameLogger logger = new Http2FrameLogger(INFO, DefaultHttp2ConnectionHandler.class);
 
-    public HelloWorldHttp2HandlerBuilder() {
+    private final HttpDispatcher dispatcher;
+
+    public DefaultHttp2ConnectionHandlerBuilder(HttpDispatcher dispatcher) {
         frameLogger(logger);
+        this.dispatcher = dispatcher;
     }
 
     @Override
-    public HelloWorldHttp2Handler build() {
+    public DefaultHttp2ConnectionHandler build() {
         return super.build();
     }
 
     @Override
-    protected HelloWorldHttp2Handler build(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
-                                           Http2Settings initialSettings) {
-        HelloWorldHttp2Handler handler = new HelloWorldHttp2Handler(decoder, encoder, initialSettings);
+    protected DefaultHttp2ConnectionHandler build(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
+                                                  Http2Settings initialSettings) {
+        DefaultHttp2ConnectionHandler handler = new DefaultHttp2ConnectionHandler(decoder, encoder, initialSettings, dispatcher);
         frameListener(handler);
         return handler;
     }

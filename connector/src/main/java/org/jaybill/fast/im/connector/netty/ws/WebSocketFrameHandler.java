@@ -20,8 +20,9 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame msg) {
         if (!(msg instanceof TextWebSocketFrame textMsg)) {
-           return;
+            return;
         }
         var textFrame = textMsg.text();
+        log.debug("text: {}", textFrame);
     }
 }

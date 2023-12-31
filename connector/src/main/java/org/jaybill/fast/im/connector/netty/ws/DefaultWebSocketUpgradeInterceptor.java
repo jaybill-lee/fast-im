@@ -1,7 +1,7 @@
 package org.jaybill.fast.im.connector.netty.ws;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpMessage;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.common.util.IdUtil;
@@ -29,7 +29,7 @@ public class DefaultWebSocketUpgradeInterceptor implements WebSocketUpgradeInter
     }
 
     @Override
-    public CompletableFuture<?> before(ChannelHandlerContext ctx, FullHttpRequest req) {
+    public CompletableFuture<?> before(ChannelHandlerContext ctx, HttpMessage req) {
         var future = new CompletableFuture<Boolean>();
         var token = req.headers().get(JwtUtil.AUTHORIZATION);
         try {

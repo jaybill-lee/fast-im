@@ -49,7 +49,7 @@ public class ConnectionHolder {
         var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(BaseConst.PLATFORM)).get();
         var tags = (List) channel.attr(AttributeKey.valueOf(BaseConst.TAGS)).get();
 
-        channelMap.put(bizId+userId+platform.name(), channelWrapper);
+        channelMap.put(bizId + userId + platform.name(), channelWrapper);
 
         var userChannelsMap = bizId2UserChannelsMap.computeIfAbsent(bizId, (k) -> new ConcurrentHashMap<>());
         var userChannels = userChannelsMap.computeIfAbsent(userId, (k) -> new CopyOnWriteArraySet<>());
@@ -66,7 +66,7 @@ public class ConnectionHolder {
     }
 
     public void remove(String bizId, String userId, String platform) {
-        var channelWrapper = channelMap.remove(bizId+userId+platform);
+        var channelWrapper = channelMap.remove(bizId + userId + platform);
         if (channelWrapper == null) {
             return;
         }

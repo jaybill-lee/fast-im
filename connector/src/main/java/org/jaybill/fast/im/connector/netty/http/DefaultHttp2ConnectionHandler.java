@@ -1,43 +1,23 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
- * "License"); you may not use this file except in compliance with the License. You may obtain a
- * copy of the License at:
- *
- * https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
- */
-
 package org.jaybill.fast.im.connector.netty.http;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.codec.http2.*;
-import io.netty.util.CharsetUtil;
-import org.jaybill.fast.im.connector.netty.http.H2cUpgradeEvt;
 
-import static io.netty.buffer.Unpooled.copiedBuffer;
-import static io.netty.buffer.Unpooled.unreleasableBuffer;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
-/**
- * A simple handler that responds with the message "Hello World!".
- */
-public final class HelloWorldHttp2Handler extends Http2ConnectionHandler implements Http2FrameListener {
+public final class DefaultHttp2ConnectionHandler extends Http2ConnectionHandler implements Http2FrameListener {
 
-    static final ByteBuf RESPONSE_BYTES = unreleasableBuffer(
-            copiedBuffer("Hello World", CharsetUtil.UTF_8)).asReadOnly();
+    private HttpDispatcher dispatcher;
 
-    HelloWorldHttp2Handler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
-                           Http2Settings initialSettings) {
+    DefaultHttp2ConnectionHandler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
+                                  Http2Settings initialSettings, HttpDispatcher dispatcher) {
         super(decoder, encoder, initialSettings);
+        this.dispatcher = dispatcher;
     }
 
     private static Http2Headers http1HeadersToHttp2Headers(FullHttpRequest request) {
@@ -60,7 +40,7 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof H2cUpgradeEvt upgradeEvent) {
             onHeadersRead(ctx, 1, http1HeadersToHttp2Headers(upgradeEvent.upgradeRequest()),
-                    0 , true);
+                    0, true);
         }
         super.userEventTriggered(ctx, evt);
     }
@@ -68,7 +48,6 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         super.exceptionCaught(ctx, cause);
-        cause.printStackTrace();
         ctx.close();
     }
 
@@ -88,7 +67,9 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     public int onDataRead(ChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, boolean endOfStream) {
         int processed = data.readableBytes() + padding;
         if (endOfStream) {
-            sendResponse(ctx, streamId, data.retain());
+            var request = Http2Request.adapt(streamId, new DefaultHttp2Headers(), null, padding);
+            var response = Http2Response.adapt(this, ctx, streamId, encoder());
+            dispatcher.service(request, response);
         }
         return processed;
     }
@@ -97,10 +78,9 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     public void onHeadersRead(ChannelHandlerContext ctx, int streamId,
                               Http2Headers headers, int padding, boolean endOfStream) {
         if (endOfStream) {
-            ByteBuf content = ctx.alloc().buffer();
-            content.writeBytes(RESPONSE_BYTES.duplicate());
-            ByteBufUtil.writeAscii(content, " - via HTTP/2");
-            sendResponse(ctx, streamId, content);
+            var request = Http2Request.adapt(streamId, headers, null, padding);
+            var response = Http2Response.adapt(this, ctx, streamId, encoder());
+            dispatcher.service(request, response);
         }
     }
 

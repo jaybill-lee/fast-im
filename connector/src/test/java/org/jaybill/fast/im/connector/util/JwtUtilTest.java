@@ -7,7 +7,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class JwtUtilTest {
@@ -16,7 +15,7 @@ public class JwtUtilTest {
     public void testCreateToken_Decode() {
         var bizId = "testBizId";
         var userId = "testUserId";
-        var token = JwtUtil.createToken(bizId,  userId, PlatformEnum.Web, null);
+        var token = JwtUtil.createToken(bizId, userId, PlatformEnum.Web, null);
         log.info("token = {}", token);
         var claims = JwtUtil.parseToken(token);
         var actualBizId = claims.getAudience().stream().toList().get(0);

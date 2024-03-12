@@ -14,6 +14,7 @@
         <module>data-server</module>
         <module>common</module>
         <module>common-cache</module>
+        <module>net</module>
     </modules>
 
     <properties>

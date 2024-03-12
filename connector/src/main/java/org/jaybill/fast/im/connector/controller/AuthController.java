@@ -1,8 +1,8 @@
 package org.jaybill.fast.im.connector.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jaybill.fast.im.connector.netty.http.Get;
-import org.jaybill.fast.im.connector.netty.http.HttpEndpoint;
+import org.jaybill.fast.im.net.http.Get;
+import org.jaybill.fast.im.net.http.HttpEndpoint;
 
 @Slf4j
 @HttpEndpoint(path = "/auth")

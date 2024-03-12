@@ -10,5 +10,4 @@ import lombok.*;
 public class ConnectionKey {
     private String bizId;
     private String userId;
-    private String platform;
 }

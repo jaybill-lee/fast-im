@@ -28,7 +28,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.jaybill.fast.im.common.cache.ConnectionCacheHelper;
+import org.jaybill.fast.im.common.cache.ChannelManager;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,8 +64,8 @@ public class CommonCacheConfig {
     }
 
     @Bean
-    public ConnectionCacheHelper connectionCacheHelper(StatefulRedisClusterConnection<String, String> connection) {
-        return new ConnectionCacheHelper(connection);
+    public ChannelManager connectionCacheHelper(StatefulRedisClusterConnection<String, String> connection) {
+        return new ChannelManager(connection);
     }
 
     private List<RedisURI> buildSeedRedisUris(String addressStr) {

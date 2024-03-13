@@ -95,12 +95,12 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
     }
 
     private void upgradeWebsocket(ChannelHandlerContext ctx, FullHttpRequest req) {
-        var interceptor = wsConfig.getInterceptor();
-        if (interceptor != null) {
+        var listener = wsConfig.getListener();
+        if (listener != null) {
             req.retain();
             CompletableFuture
                 // pre-check if we can upgrade.
-                .supplyAsync(() -> interceptor.beforeHandshake(ctx, req), executor)
+                .supplyAsync(() -> listener.beforeHandshake(ctx, req), executor)
                 .whenComplete((r, t) -> {
                     // occur error
                     if (t != null) {
@@ -126,12 +126,12 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
 
                             // invoke onSuccess()
                             CompletableFuture
-                                .runAsync(() -> interceptor.onHandshakeSuccess(ctx), executor)
+                                .runAsync(() -> listener.onHandshakeSuccess(ctx), executor)
                                 .whenComplete((onSuccessResult, onSuccessThrowable) -> {
                                     // Register closeFuture, when channel is closed, clear resources
                                     f.channel().closeFuture().addListener((ChannelFutureListener) future -> {
                                         log.debug("channel close, id:{}", f.channel().id());
-                                        CompletableFuture.runAsync(() -> interceptor.onChannelClose(ctx), executor);
+                                        CompletableFuture.runAsync(() -> listener.onChannelClose(ctx), executor);
                                     });
                                     
                                     if (onSuccessThrowable != null) {
@@ -142,7 +142,7 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
                         } else {
                             log.debug("websocket upgrade fail");
                             TcpUtil.rst(ctx);
-                            CompletableFuture.runAsync(() -> interceptor.onHandshakeFail(ctx), executor);
+                            CompletableFuture.runAsync(() -> listener.onHandshakeFail(ctx), executor);
                         }
                     });
                 });

@@ -43,7 +43,7 @@ public class NettyBeanConfig {
                                                 .handlers(List.of(
                                                         new IdleStateHandler(0, 0, 30, TimeUnit.SECONDS),
                                                         new WebSocketFrameHandler(defaultWebSocketListener, listenerThreadFactory)))
-                                                .interceptor(defaultWebSocketListener)
+                                                .listener(defaultWebSocketListener)
                                                 .build(),
                                         HttpConfig.builder()
                                                 .dispatcher(new HttpDispatcher())

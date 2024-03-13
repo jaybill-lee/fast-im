@@ -14,6 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class WebSocketUpgradeConfig {
     private String path;
-    private WebSocketListener interceptor;
+    private WebSocketListener listener;
     private List<ChannelHandler> handlers;
 }

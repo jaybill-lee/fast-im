@@ -2,6 +2,7 @@ package org.jaybill.fast.im.net.http;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.common.util.JsonUtil;
 import org.jaybill.fast.im.net.util.AnnotationUtil;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadFactory;
 
+@Slf4j
 public class HttpDispatcher {
 
     private final List<HttpFilter> filters = new CopyOnWriteArrayList<>();
@@ -53,6 +55,7 @@ public class HttpDispatcher {
         // Mapping path, if we can not find endpoint, return 404
         var methodDefinition = HttpEndpointMappings.get(req.path(), req.method());
         if (methodDefinition == null) {
+            log.error("http endpoint not found, method:{}, path:{}", req.method(), req.path());
             res.response(HttpResponseStatus.NOT_FOUND, null, null);
             return;
         }
@@ -61,6 +64,7 @@ public class HttpDispatcher {
         for (var filter : filters) {
             var filterResult = filter.before(req);
             if (!filterResult.continued) {
+                log.error("http filter abort, method:{}, path:{}", req.method(), req.path());
                 this.doFilterResponse(res, filterResult, filterResult.jsonBody);
                 return;
             }
@@ -73,7 +77,7 @@ public class HttpDispatcher {
         for (int i = 0; i < methodParams.length; i++) {
             var methodParam = methodParams[i];
             var methodParamType = methodParam.getType();
-            JsonBody jsonBodyAnno = AnnotationUtil.findAnnotationIncludeMeta(method, JsonBody.class);
+            JsonBody jsonBodyAnno = AnnotationUtil.findAnnotationIncludeMeta(methodParam, JsonBody.class);
             if (jsonBodyAnno == null) {
                 try {
                     invokeParams[i] = this.prepareParam(req, methodParamType, methodParam.getName());
@@ -106,6 +110,7 @@ public class HttpDispatcher {
 
             this.doResponse(res, HttpResponseStatus.OK, returnObj);
         } catch (Exception e) {
+            log.error("http process error, method:{}, path:{}, e:", req.method(), req.path(), e);
             res.response(HttpResponseStatus.INTERNAL_SERVER_ERROR, null, null);
         }
     }

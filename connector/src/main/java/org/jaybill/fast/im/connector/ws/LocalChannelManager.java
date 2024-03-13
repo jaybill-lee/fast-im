@@ -8,6 +8,7 @@ import org.jaybill.fast.im.connector.constant.enums.PlatformEnum;
 import org.jaybill.fast.im.connector.util.ChannelUtil;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,6 +158,17 @@ public class LocalChannelManager {
                 this.removeChannel(channelSet, channel);
             }
         }
+    }
+
+    /**
+     * Get all channels of bizId + userId
+     */
+    public Set<Channel> getChannels(String bizId, String userId) {
+        var channels = bizIdAndUserId2ChannelsMap.get(this.buildKey(bizId, userId));
+        if (channels == null) {
+            return Collections.emptySet();
+        }
+        return channels;
     }
 
     private String buildKey(String... keys) {

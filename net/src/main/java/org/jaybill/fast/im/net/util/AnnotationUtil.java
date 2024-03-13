@@ -1,6 +1,7 @@
 package org.jaybill.fast.im.net.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,16 +12,16 @@ public class AnnotationUtil {
      * Find direct annotation in method and the meta annotation of the direct annotation. <br/>
      * Found the first one and return immediately.
      *
-     * @param method
+     * @param element
      * @param annoClazz
      * @return
      */
-    public static <T extends Annotation> T findAnnotationIncludeMeta(Method method, Class<T> annoClazz) {
-        var directAnnotation = method.getAnnotation(annoClazz);
+    public static <T extends Annotation> T findAnnotationIncludeMeta(AnnotatedElement element, Class<T> annoClazz) {
+        var directAnnotation = element.getAnnotation(annoClazz);
         if (directAnnotation != null) {
             return directAnnotation;
         }
-        return findMeta(method.getAnnotations(), annoClazz);
+        return findMeta(element.getAnnotations(), annoClazz);
     }
 
     /**

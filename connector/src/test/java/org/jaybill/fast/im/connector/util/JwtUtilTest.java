@@ -1,7 +1,7 @@
 package org.jaybill.fast.im.connector.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jaybill.fast.im.connector.constant.BaseConst;
+import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
 import org.jaybill.fast.im.connector.constant.enums.PlatformEnum;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,11 +20,11 @@ public class JwtUtilTest {
         var claims = JwtUtil.parseToken(token);
         var actualBizId = claims.getAudience().stream().toList().get(0);
         Assert.assertEquals(bizId, actualBizId);
-        var actualUserId = claims.get(BaseConst.USER_ID, String.class);
+        var actualUserId = claims.get(ChannelBaseConst.USER_ID, String.class);
         Assert.assertEquals(userId, actualUserId);
-        var actualPlatform = claims.get(BaseConst.PLATFORM, String.class);
+        var actualPlatform = claims.get(ChannelBaseConst.PLATFORM, String.class);
         Assert.assertEquals(PlatformEnum.Web.name(), actualPlatform);
-        var actualTags = claims.get(BaseConst.TAGS, List.class);
+        var actualTags = claims.get(ChannelBaseConst.TAGS, List.class);
         Assert.assertNotNull(actualTags);
         Assert.assertEquals(0, actualTags.size());
     }

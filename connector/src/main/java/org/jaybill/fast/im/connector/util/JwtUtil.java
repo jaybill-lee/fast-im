@@ -5,7 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.jaybill.fast.im.common.util.AssertUtil;
 import org.jaybill.fast.im.common.util.IdUtil;
-import org.jaybill.fast.im.connector.constant.BaseConst;
+import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
 import org.jaybill.fast.im.connector.constant.enums.PlatformEnum;
 
 import java.nio.charset.StandardCharsets;
@@ -32,9 +32,9 @@ public class JwtUtil {
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 2))
                 .signWith(SignatureAlgorithm.HS256, BASE64_SECRET)
-                .claim(BaseConst.USER_ID, userId)
-                .claim(BaseConst.PLATFORM, platform.name())
-                .claim(BaseConst.TAGS, tags)
+                .claim(ChannelBaseConst.USER_ID, userId)
+                .claim(ChannelBaseConst.PLATFORM, platform.name())
+                .claim(ChannelBaseConst.TAGS, tags)
                 .compact();
     }
 

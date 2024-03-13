@@ -3,7 +3,7 @@ package org.jaybill.fast.im.connector.ws;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
-import org.jaybill.fast.im.connector.constant.BaseConst;
+import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
 import org.jaybill.fast.im.connector.constant.enums.PlatformEnum;
 import org.jaybill.fast.im.connector.util.ChannelUtil;
 import org.springframework.stereotype.Component;
@@ -81,10 +81,10 @@ public class LocalChannelManager {
      * @param channel
      */
     public void addChannel(Channel channel) {
-        var bizId = (String) channel.attr(AttributeKey.valueOf(BaseConst.BIZ_ID)).get();
-        var userId = (String) channel.attr(AttributeKey.valueOf(BaseConst.USER_ID)).get();
-        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(BaseConst.PLATFORM)).get();
-        var tags = (List<String>) channel.attr(AttributeKey.valueOf(BaseConst.TAGS)).get();
+        var bizId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID)).get();
+        var userId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID)).get();
+        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM)).get();
+        var tags = (List<String>) channel.attr(AttributeKey.valueOf(ChannelBaseConst.TAGS)).get();
 
         var channelId = ChannelUtil.getId(channel);
         log.debug("add channel id:{}", channelId);
@@ -120,10 +120,10 @@ public class LocalChannelManager {
      * @param channel
      */
     public void removeChannel(Channel channel) {
-        var bizId = (String) channel.attr(AttributeKey.valueOf(BaseConst.BIZ_ID)).get();
-        var userId = (String) channel.attr(AttributeKey.valueOf(BaseConst.USER_ID)).get();
-        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(BaseConst.PLATFORM)).get();
-        var tags = (List<String>) channel.attr(AttributeKey.valueOf(BaseConst.TAGS)).get();
+        var bizId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID)).get();
+        var userId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID)).get();
+        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM)).get();
+        var tags = (List<String>) channel.attr(AttributeKey.valueOf(ChannelBaseConst.TAGS)).get();
 
         id2ChannelMap.remove(ChannelUtil.getId(channel));
 

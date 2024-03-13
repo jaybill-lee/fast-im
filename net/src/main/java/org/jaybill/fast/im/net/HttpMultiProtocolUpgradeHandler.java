@@ -124,16 +124,16 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
                         if (f.isSuccess()) {
                             log.debug("websocket upgrade success");
 
-                            // Register closeFuture, when channel is closed, clear resources
-                            f.channel().closeFuture().addListener((ChannelFutureListener) future -> {
-                                log.debug("channel close, id:{}", f.channel().id());
-                                CompletableFuture.runAsync(() -> interceptor.onChannelClose(ctx), executor);
-                            });
-
                             // invoke onSuccess()
                             CompletableFuture
                                 .runAsync(() -> interceptor.onHandshakeSuccess(ctx), executor)
                                 .whenComplete((onSuccessResult, onSuccessThrowable) -> {
+                                    // Register closeFuture, when channel is closed, clear resources
+                                    f.channel().closeFuture().addListener((ChannelFutureListener) future -> {
+                                        log.debug("channel close, id:{}", f.channel().id());
+                                        CompletableFuture.runAsync(() -> interceptor.onChannelClose(ctx), executor);
+                                    });
+                                    
                                     if (onSuccessThrowable != null) {
                                         log.debug("onSuccess throw error:", onSuccessThrowable);
                                         TcpUtil.rst(ctx);

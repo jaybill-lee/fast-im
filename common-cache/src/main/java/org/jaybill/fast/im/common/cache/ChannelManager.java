@@ -2,12 +2,14 @@ package org.jaybill.fast.im.common.cache;
 
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.jaybill.fast.im.common.util.AssertUtil;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -74,5 +76,24 @@ public class ChannelManager {
             return Collections.emptyMap();
         }
         return connection.sync().hgetall(RedisKey.getUserConnectedServerKey(bizId, userId));
+    }
+
+    /**
+     * save offline messages
+     */
+    public void inOfflineQueue(String bizId, String userId, List<String> messages) {
+        AssertUtil.notNull(bizId);
+        AssertUtil.notNull(userId);
+        if (CollectionUtils.isEmpty(messages)) {
+            return;
+        }
+        var key = RedisKey.getUserOfflineQueue(bizId, userId);
+        Long len = connection.sync().rpush(key, messages.toArray(new String[0]));
+        log.debug("current queue len:{}", len);
+        // Default retention for up to 30 days, with a maximum of 100 entries
+        connection.sync().expire(key, Duration.ofDays(30));
+        if (len != null && len > 100) {
+            connection.sync().lpop(key, len - 100);
+        }
     }
 }

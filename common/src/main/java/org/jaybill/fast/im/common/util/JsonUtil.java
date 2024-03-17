@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
+import java.io.File;
+
 public class JsonUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -21,6 +23,11 @@ public class JsonUtil {
 
     @SneakyThrows
     public static <T> T fromJson(String json, Class<T> cls) {
+        return OBJECT_MAPPER.readValue(json, cls);
+    }
+
+    @SneakyThrows
+    public static <T> T fromJson(File json, Class<T> cls) {
         return OBJECT_MAPPER.readValue(json, cls);
     }
 }

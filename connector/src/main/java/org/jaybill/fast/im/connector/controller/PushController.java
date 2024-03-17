@@ -3,8 +3,11 @@ package org.jaybill.fast.im.connector.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.common.util.AssertUtil;
 import org.jaybill.fast.im.connector.controller.req.SimplePushReq;
+import org.jaybill.fast.im.connector.filter.AuthFilter;
 import org.jaybill.fast.im.connector.ws.ChannelEvtHandler;
+import org.jaybill.fast.im.connector.ws.PushResult;
 import org.jaybill.fast.im.connector.ws.evt.PushEvt;
+import org.jaybill.fast.im.net.http.HttpContext;
 import org.jaybill.fast.im.net.http.HttpEndpoint;
 import org.jaybill.fast.im.net.http.JsonBody;
 import org.jaybill.fast.im.net.http.Post;
@@ -20,16 +23,15 @@ public class PushController {
     private ChannelEvtHandler evtHandler;
 
     @Post
-    public String push(@JsonBody SimplePushReq req) {
+    public PushResult push(@JsonBody SimplePushReq req, HttpContext ctx) {
         AssertUtil.notNull(req);
         AssertUtil.notNull(req.getUserId());
         AssertUtil.notNull(req.getText());
 
-        evtHandler.pushEvt(PushEvt.builder()
-                        .bizId("testBizId")
+        var bizId = AuthFilter.getBizId(ctx);
+        return evtHandler.pushEvt(PushEvt.builder()
+                        .bizId(bizId)
                         .userId(req.getUserId())
-                        .text(req.getText())
-                        .includeRemoteChannel(true).build());
-        return "{}";
+                        .message(req.getText()).build());
     }
 }

@@ -32,7 +32,7 @@ public class DefaultWebSocketListener implements WebSocketListener {
             channel.attr(AttributeKey.valueOf(ChannelBaseConst.CHANNEL_ID)).setIfAbsent(IdUtil.getUuid());
 
             var claims = JwtUtil.parseToken(token);
-            var bizId = claims.getAudience().stream().findFirst().orElse("");
+            var bizId = claims.get(ChannelBaseConst.BIZ_ID, String.class);
             var bizIdAttr = channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID));
             bizIdAttr.set(bizId);
 

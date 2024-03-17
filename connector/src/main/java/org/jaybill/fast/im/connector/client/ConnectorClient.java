@@ -1,12 +1,15 @@
 package org.jaybill.fast.im.connector.client;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.Method;
+import org.jaybill.fast.im.common.util.JsonUtil;
+import org.jaybill.fast.im.connector.ws.PushResult;
+import org.jaybill.fast.im.connector.ws.evt.InternalPushEvt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -25,26 +28,22 @@ public class ConnectorClient {
     @Autowired
     private CloseableHttpAsyncClient httpAsyncClient;
 
-    public CompletableFuture<?> asyncDiscardConn(String serverIp, String bizId, String userId, String platform) {
-        if (StringUtils.isAnyEmpty(serverIp, bizId, userId, platform)) {
-            return CompletableFuture.completedFuture(null);
-        }
-
-        var future = new CompletableFuture<>();
-        var req = SimpleHttpRequest.create(Method.PUT, UriBuilder.builder()
+    public CompletableFuture<PushResult> localPush(String serverIp, InternalPushEvt pushEvt) {
+        var future = new CompletableFuture<PushResult>();
+        var req = SimpleHttpRequest.create(Method.POST, UriBuilder.builder()
                 .schema(schema)
                 .address(serverIp)
                 .port(port)
-                .path("/discard")
-                .params("bizId", bizId)
-                .params("userId", userId)
-                .params("platform", platform)
+                .path("/local/push")
                 .build());
+        req.setBody(JsonUtil.toJson(pushEvt), ContentType.APPLICATION_JSON);
         var ctx = new HttpClientContext();
         httpAsyncClient.execute(req, new DefaultFutureCallback<>(req, ctx, future) {
             @Override
             public void whenSuccess(SimpleHttpResponse result) {
-
+                var body = result.getBody().getBodyText();
+                var ack = JsonUtil.fromJson(body, PushResult.class);
+                future.complete(ack);
             }
         });
         return future;

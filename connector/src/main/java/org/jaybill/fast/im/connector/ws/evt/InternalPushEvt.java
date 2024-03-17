@@ -1,6 +1,7 @@
 package org.jaybill.fast.im.connector.ws.evt;
 
 import lombok.*;
+import org.jaybill.fast.im.connector.ws.message.Message;
 
 import java.util.concurrent.TimeUnit;
 
@@ -9,18 +10,20 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class PushEvt {
+public class InternalPushEvt {
     private String bizId;
     private String userId;
-    private String message;
+    private Message message;
     /**
      * If it is true, it will wait for the acknowledgment from the other end;
      * otherwise, it will send and forget.
      */
     private boolean withAck;
     /**
-     * if {@link PushEvt#withAck} is true, it takes effect.
+     * if {@link PushEvt#isWithAck()} is true, it takes effect.
      */
     private long timeout;
     private TimeUnit unit;
+
+    private boolean enableRemotePush;
 }

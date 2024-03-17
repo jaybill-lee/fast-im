@@ -6,12 +6,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.jaybill.fast.im.connector.filter.AuthFilter;
 import org.jaybill.fast.im.connector.ws.DefaultWebSocketListener;
 import org.jaybill.fast.im.connector.ws.ChannelEvtHandler;
 import org.jaybill.fast.im.net.ChannelErrorHandler;
 import org.jaybill.fast.im.net.HttpMultiProtocolUpgradeHandler;
-import org.jaybill.fast.im.net.http.HttpConfig;
-import org.jaybill.fast.im.net.http.HttpDispatcher;
+import org.jaybill.fast.im.net.http.*;
 import org.jaybill.fast.im.net.ws.WebSocketFrameHandler;
 import org.jaybill.fast.im.net.ws.WebSocketUpgradeConfig;
 import org.springframework.context.annotation.Bean;
@@ -46,7 +46,7 @@ public class NettyBeanConfig {
                                                 .listener(defaultWebSocketListener)
                                                 .build(),
                                         HttpConfig.builder()
-                                                .dispatcher(new HttpDispatcher())
+                                                .dispatcher(new HttpDispatcher().addFilter(new AuthFilter()))
                                                 .build(),
                                         listenerThreadFactory))
                                 .addLast(new ChannelErrorHandler());

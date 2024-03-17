@@ -6,6 +6,7 @@ public interface ChannelEvtHandler {
     void onlineEvt(OnlineEvt evt);
     void offlineEvt(OfflineEvt evt);
     void heartbeatEvt(HeartbeatEvt evt);
-    void pushEvt(PushEvt evt);
-    void ackEvt(Evt evt);
+    PushResult pushEvt(PushEvt evt);
+    PushResult localPushEvt(InternalPushEvt evt);
+    void ackEvt(AckEvt evt);
 }

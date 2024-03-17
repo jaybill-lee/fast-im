@@ -59,7 +59,7 @@ public class HttpClientConfig {
                         .build())
                 .evictExpiredConnections()
                 .evictIdleConnections(Timeout.ofSeconds(10))
-                .setRetryStrategy(new DefaultHttpRequestRetryStrategy(3, Timeout.ofSeconds(3)))
+                .setRetryStrategy(new DefaultHttpRequestRetryStrategy(3, Timeout.ofMilliseconds(50)))
                 .addRequestInterceptorFirst((request, entity, context) -> {})
                 .addResponseInterceptorFirst((response, entity, context) -> {})
                 .build();

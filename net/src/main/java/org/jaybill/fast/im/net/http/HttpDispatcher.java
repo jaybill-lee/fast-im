@@ -19,17 +19,18 @@ public class HttpDispatcher {
     private final List<HttpFilter> filters = new CopyOnWriteArrayList<>();
     private final ThreadFactory threadFactory = Thread.ofVirtual().name("http-dispatcher-", 0).factory();
 
-    public void addFilter(HttpFilter filter) {
+    public HttpDispatcher addFilter(HttpFilter filter) {
         filters.add(filter);
+        return this;
     }
 
     /**
      * 1. Submit HTTP request to virtual threads; <br/>
      * 2. Find the corresponding Java method based on the "path" and "method" of HTTP; <br/>
-     * 3. Execute the {@link HttpFilter#before(BaseHttpRequest)}; <br/>
+     * 3. Execute the {@link HttpFilter#before(BaseHttpRequest, HttpContext)}; <br/>
      * 4. Complete the conversion of HTTP request parameters and request body to Java method input parameters; <br/>
      * 5. Reflection calling Java method; <br/>
-     * 6. Execute the {@link HttpFilter#after(BaseHttpRequest, Object)} <br/>
+     * 6. Execute the {@link HttpFilter#after(BaseHttpRequest, Object, HttpContext)} <br/>
      * 7. Return response <br/>
      *
      * @param req http request
@@ -60,13 +61,19 @@ public class HttpDispatcher {
             return;
         }
 
+        var ctx = new HttpContext();
         // Before invoke
         for (var filter : filters) {
-            var filterResult = filter.before(req);
-            if (!filterResult.continued) {
-                log.error("http filter abort, method:{}, path:{}", req.method(), req.path());
-                this.doFilterResponse(res, filterResult, filterResult.jsonBody);
-                return;
+            try {
+                var filterResult = filter.before(req, ctx);
+                if (filterResult != null && !filterResult.continued) {
+                    log.error("http filter abort, method:{}, path:{}", req.method(), req.path());
+                    this.doFilterResponse(res, filterResult, filterResult.jsonBody);
+                    return;
+                }
+            } catch (Throwable e) {
+                log.error("exec before filters error:", e);
+                res.response(HttpResponseStatus.INTERNAL_SERVER_ERROR, null, null);
             }
         }
 
@@ -80,7 +87,7 @@ public class HttpDispatcher {
             JsonBody jsonBodyAnno = AnnotationUtil.findAnnotationIncludeMeta(methodParam, JsonBody.class);
             if (jsonBodyAnno == null) {
                 try {
-                    invokeParams[i] = this.prepareParam(req, methodParamType, methodParam.getName());
+                    invokeParams[i] = this.prepareParam(req, methodParamType, methodParam.getName(), ctx);
                 } catch (NoSuchMethodException | IllegalAccessException | InstantiationException |
                          InvocationTargetException e) {
                     throw new RuntimeException(e);
@@ -101,8 +108,8 @@ public class HttpDispatcher {
             // We can decorate the return value
             HttpFilter.Result filterResult;
             for (var filter : filters) {
-                filterResult = filter.after(req, returnObj);
-                if (!filterResult.continued) {
+                filterResult = filter.after(req, returnObj, ctx);
+                if (filterResult != null && !filterResult.continued) {
                     this.doFilterResponse(res, filterResult, JsonUtil.toJson(returnObj));
                     return;
                 }
@@ -115,8 +122,12 @@ public class HttpDispatcher {
         }
     }
 
-    private Object prepareParam(BaseHttpRequest request, Class<?> methodParamType, String methodParamName)
+    private Object prepareParam(BaseHttpRequest request, Class<?> methodParamType, String methodParamName, HttpContext ctx)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (methodParamType.isAssignableFrom(HttpContext.class)) {
+            return ctx;
+        }
+
         var objWrapper = this.parseBaseType(request, methodParamType, methodParamName);
         if (!objWrapper.complexType) {
             return objWrapper.value;

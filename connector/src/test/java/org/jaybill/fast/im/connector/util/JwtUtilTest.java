@@ -15,10 +15,10 @@ public class JwtUtilTest {
     public void testCreateToken_Decode() {
         var bizId = "testBizId";
         var userId = "testUserId";
-        var token = JwtUtil.createToken(bizId, userId, PlatformEnum.Web, null);
+        var token = JwtUtil.createWebsocketToken(bizId, userId, PlatformEnum.Web, null);
         log.info("token = {}", token);
         var claims = JwtUtil.parseToken(token);
-        var actualBizId = claims.getAudience().stream().toList().get(0);
+        var actualBizId = claims.get(ChannelBaseConst.BIZ_ID, String.class);
         Assert.assertEquals(bizId, actualBizId);
         var actualUserId = claims.get(ChannelBaseConst.USER_ID, String.class);
         Assert.assertEquals(userId, actualUserId);
@@ -27,5 +27,15 @@ public class JwtUtilTest {
         var actualTags = claims.get(ChannelBaseConst.TAGS, List.class);
         Assert.assertNotNull(actualTags);
         Assert.assertEquals(0, actualTags.size());
+    }
+
+    @Test
+    public void testCreateInternalToken_Decode() {
+        var token = JwtUtil.createInternalServiceToken();
+        var claims = JwtUtil.parseToken(token);
+        var iss = claims.getIssuer();
+        var aud = claims.getAudience().stream().toList().get(0);
+        Assert.assertEquals(JwtUtil.ISSUER, iss);
+        Assert.assertEquals(JwtUtil.ISSUER, aud);
     }
 }

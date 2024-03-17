@@ -12,15 +12,15 @@ public interface HttpFilter {
      * You can prevent the filter from continuing to execute by setting {@link BeforeResult#continued}=false,
      * if so, we will use {@link BeforeResult#status} and {@link BeforeResult#jsonBody} to directly return the response.
      */
-    BeforeResult before(BaseHttpRequest req);
+    BeforeResult before(BaseHttpRequest req, HttpContext ctx);
 
     /**
-     * It's similar to {@link HttpFilter#before(BaseHttpRequest)}. <br/>
+     * It's similar to {@link HttpFilter#before(BaseHttpRequest, HttpContext)}. <br/>
      * @param req       original http request
      * @param returnObj original return obj, you can decorate it
      * @return
      */
-    Result after(BaseHttpRequest req, Object returnObj);
+    Result after(BaseHttpRequest req, Object returnObj, HttpContext ctx);
 
     @Data
     @SuperBuilder

@@ -1,15 +1,18 @@
 package org.jaybill.fast.im.connector.ws;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.common.cache.ChannelManager;
 import org.jaybill.fast.im.common.cache.ConnectionKey;
+import org.jaybill.fast.im.common.util.AssertUtil;
+import org.jaybill.fast.im.common.util.IdUtil;
 import org.jaybill.fast.im.common.util.IpUtil;
 import org.jaybill.fast.im.connector.util.ChannelUtil;
 import org.jaybill.fast.im.connector.ws.evt.*;
+import org.jaybill.fast.im.connector.ws.message.Message;
+import org.jaybill.fast.im.connector.ws.strategy.AckPushStrategy;
+import org.jaybill.fast.im.connector.ws.strategy.PushStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -67,27 +70,35 @@ public class DefaultChannelEvtHandler implements ChannelEvtHandler {
     }
 
     @Override
-    public void pushEvt(PushEvt evt) {
-        // 1.get all local channels and push
-        var channels = localChannelManager.getChannels(evt.getBizId(), evt.getUserId());
-        channels.forEach(channel -> channel.writeAndFlush(new TextWebSocketFrame(evt.getText()))
-                .addListener((ChannelFutureListener) future -> {
-                    if (future.isSuccess()) {
-                        log.debug("writeAndFlush success, id:{}", ChannelUtil.getId(channel));
-                    } else {
-                        log.error("writeAndFlush fail, id:{}, e:", ChannelUtil.getId(channel), future.cause());
-                    }
-                }));
-
-        // 2.get all remote channels and push
-        if (evt.isIncludeRemoteChannel()) {
-
-        }
+    public PushResult pushEvt(PushEvt evt) {
+        AssertUtil.notNull(evt);
+        AssertUtil.notNull(evt.getBizId());
+        AssertUtil.notNull(evt.getUserId());
+        AssertUtil.notNull(evt.getMessage());
+        boolean withAck = evt.isWithAck();
+        var pushStrategy = PushStrategy.getInstance(withAck);
+        return pushStrategy.push(InternalPushEvt.builder()
+                        .bizId(evt.getBizId())
+                        .userId(evt.getUserId())
+                        .withAck(evt.isWithAck())
+                        .message(Message.builder().id(IdUtil.getUuid()).message(evt.getMessage()).build())
+                        .timeout(evt.getTimeout())
+                        .enableRemotePush(true)
+                        .unit(evt.getUnit()).build());
     }
 
     @Override
-    public void ackEvt(Evt evt) {
+    public PushResult localPushEvt(InternalPushEvt evt) {
+        evt.setEnableRemotePush(false); // always false
+        boolean withAck = evt.isWithAck();
+        var pushStrategy = PushStrategy.getInstance(withAck);
+        return pushStrategy.push(evt);
+    }
 
+    @Override
+    public void ackEvt(AckEvt evt) {
+        var strategy = (AckPushStrategy) PushStrategy.getInstance(true);
+        strategy.ack(evt);
     }
 
     private void recordNextRenewalTimePoint(Channel channel) {

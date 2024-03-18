@@ -1,0 +1,2 @@
+- JDK21
+- SpringBoot3

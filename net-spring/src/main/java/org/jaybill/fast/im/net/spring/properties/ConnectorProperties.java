@@ -1,11 +1,12 @@
-package org.jaybill.fast.im.connector.beans;
+package org.jaybill.fast.im.net.spring.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
+/**
+ * Base net config
+ */
 @Data
-@Component
 @ConfigurationProperties(prefix = "fast.im.connector")
 public class ConnectorProperties {
 
@@ -13,9 +14,4 @@ public class ConnectorProperties {
      * http port
      */
     private int httpPort;
-
-    /**
-     * tcp port
-     */
-    private int port;
 }

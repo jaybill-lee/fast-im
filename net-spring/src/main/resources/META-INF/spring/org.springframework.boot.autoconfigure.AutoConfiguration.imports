@@ -1,0 +1,2 @@
+org.jaybill.fast.im.net.spring.HttpEndpointBeanPostProcessor
+org.jaybill.fast.im.net.spring.NettyBeanConfig

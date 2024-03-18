@@ -10,11 +10,11 @@
     <packaging>pom</packaging>
     <modules>
         <module>connector</module>
-        <module>push-gateway</module>
         <module>data-server</module>
         <module>common</module>
         <module>common-cache</module>
         <module>net</module>
+        <module>net-spring</module>
     </modules>
 
     <properties>

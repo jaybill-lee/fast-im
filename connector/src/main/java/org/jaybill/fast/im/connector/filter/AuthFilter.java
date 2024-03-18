@@ -5,7 +5,9 @@ import org.jaybill.fast.im.connector.util.JwtUtil;
 import org.jaybill.fast.im.net.http.BaseHttpRequest;
 import org.jaybill.fast.im.net.http.HttpContext;
 import org.jaybill.fast.im.net.http.HttpFilter;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AuthFilter implements HttpFilter  {
 
     @Override

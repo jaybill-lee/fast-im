@@ -12,7 +12,6 @@ import org.jaybill.fast.im.net.util.TcpUtil;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 @Slf4j
 public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
@@ -20,9 +19,14 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     private final WebSocketListener webSocketListener;
     private final Executor executor;
 
-    public WebSocketFrameHandler(WebSocketListener webSocketListener, ThreadFactory threadFactory) {
+    public WebSocketFrameHandler(WebSocketListener webSocketListener) {
         this.webSocketListener = webSocketListener;
-        this.executor = Executors.newThreadPerTaskExecutor(threadFactory);
+        this.executor = Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual()
+                    .inheritInheritableThreadLocals(false)
+                    .name("jb_listener_", 0)
+                    .factory()
+        );
     }
 
     @Override

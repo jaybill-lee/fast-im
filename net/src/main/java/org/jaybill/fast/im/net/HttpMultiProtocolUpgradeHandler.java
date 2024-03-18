@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.SWITCHING_PROTOCOLS;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -40,14 +39,19 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
     private final HttpConfig httpConfig;
     private final Executor executor;
 
-    public HttpMultiProtocolUpgradeHandler(WebSocketUpgradeConfig wsConfig, HttpConfig httpConfig, ThreadFactory threadFactory) {
-        AssertUtil.notNull(wsConfig);
+    public HttpMultiProtocolUpgradeHandler(WebSocketUpgradeConfig wsConfig, HttpConfig httpConfig) {
+        AssertUtil.notNull(httpConfig);
         this.wsConfig = wsConfig;
-        if (!this.wsConfig.getPath().startsWith("/")) {
-            this.wsConfig.setPath("/" + this.wsConfig.getPath());
+        if (wsConfig != null) {
+            if (!this.wsConfig.getPath().startsWith("/")) {
+                this.wsConfig.setPath("/" + this.wsConfig.getPath());
+            }
         }
         this.httpConfig = httpConfig;
-        this.executor = Executors.newThreadPerTaskExecutor(threadFactory);
+        this.executor = Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
+                .inheritInheritableThreadLocals(false)
+                .name("jb_upgrade_", 0)
+                .factory());
     }
 
     @Override
@@ -65,7 +69,7 @@ public class HttpMultiProtocolUpgradeHandler extends SimpleChannelInboundHandler
             return;
         }
 
-        if (req.uri().equals(wsConfig.getPath())) {
+        if (wsConfig != null && req.uri().equals(wsConfig.getPath())) {
             // Try to handle websocket handshake.
             this.upgradeWebsocket(ctx, req);
         } else if (verifyUpgradeH2cHeaders(req)) {

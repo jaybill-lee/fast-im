@@ -12,17 +12,17 @@ import org.jaybill.fast.im.connector.ws.evt.HeartbeatEvt;
 import org.jaybill.fast.im.connector.ws.evt.OfflineEvt;
 import org.jaybill.fast.im.connector.ws.evt.OnlineEvt;
 import org.jaybill.fast.im.net.ws.WebSocketListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
+@Component
 public class DefaultWebSocketListener implements WebSocketListener {
 
-    private final ChannelEvtHandler evtHandler;
-
-    public DefaultWebSocketListener(ChannelEvtHandler evtHandler) {
-        this.evtHandler = evtHandler;
-    }
+    @Autowired
+    private ChannelEvtHandler evtHandler;
 
     @Override
     public boolean beforeHandshake(ChannelHandlerContext ctx, HttpMessage req) {

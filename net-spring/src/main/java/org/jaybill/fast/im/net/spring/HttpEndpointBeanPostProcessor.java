@@ -1,8 +1,8 @@
-package org.jaybill.fast.im.connector.beans;
+package org.jaybill.fast.im.net.spring;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jaybill.fast.im.net.util.AnnotationUtil;
 import org.jaybill.fast.im.net.http.*;
+import org.jaybill.fast.im.net.util.AnnotationUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;

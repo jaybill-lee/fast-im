@@ -28,7 +28,7 @@ public class Http2Request implements BaseHttpRequest {
             headers.put(entry.getKey().toString(), entry.getValue().toString());
         }
         var rawPath = http2Headers.path().toString();
-        var uriComponent = UriUtil.parseUri(rawPath);
+        var uriComponent = UriUtil.resolveUri(rawPath);
         this.path = uriComponent.getPath();
         this.paramsMap = uriComponent.getParams();
     }

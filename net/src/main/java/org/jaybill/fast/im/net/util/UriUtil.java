@@ -1,6 +1,7 @@
 package org.jaybill.fast.im.net.util;
 
 import lombok.Getter;
+import org.jaybill.fast.im.common.util.AssertUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +18,11 @@ public class UriUtil {
         }
     }
 
-    public static UriComponent parseUri(String rawPath) {
+    /**
+     * uri -> UriComponent
+     * @param rawPath uri
+     */
+    public static UriComponent resolveUri(String rawPath) {
         var uriComponent = new UriComponent();
         int index = rawPath.indexOf("?");
         if (index > 0) {
@@ -37,5 +42,13 @@ public class UriUtil {
             uriComponent.path = rawPath;
         }
         return uriComponent;
+    }
+
+    /**
+     * build server format string
+     */
+    public static String buildServerAddress(String ip, int port) {
+        AssertUtil.notNull(ip);
+        return ip + ":" + port;
     }
 }

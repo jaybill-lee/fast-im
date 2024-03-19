@@ -62,6 +62,8 @@ public class NettyBeanConfig implements ApplicationListener<ContextRefreshedEven
 
     /**
      * All bean init success, then we start net server.
+     * Note: After the method is executed, external traffic can enter.
+     *       So we must ensure that the resource initialization is completed before this.
      */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {

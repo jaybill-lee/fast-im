@@ -37,17 +37,6 @@ public class LocalChannelManager {
     private final Map<String, Set<Channel>> bizIdAndUserId2ChannelsMap;
 
     /**
-     * key - bizId:platform
-     */
-    private final Map<String, Set<Channel>> bizIdAndPlatform2ChannelsMap;
-
-    /**
-     * key - bizId:userId:platform
-     */
-    private final Map<String, Set<Channel>> bizIdAndUserIdAndPlatform2ChannelsMap;
-
-
-    /**
      * key: bizId <br/>
      * subKey: userId
      */
@@ -69,8 +58,6 @@ public class LocalChannelManager {
         this.id2ChannelMap = new ConcurrentHashMap<>();
         this.bizId2ChannelsMap = new ConcurrentHashMap<>();
         this.bizIdAndUserId2ChannelsMap = new ConcurrentHashMap<>();
-        this.bizIdAndPlatform2ChannelsMap = new ConcurrentHashMap<>();
-        this.bizIdAndUserIdAndPlatform2ChannelsMap = new ConcurrentHashMap<>();
         this.bizId2Platform2ChannelsMap = new ConcurrentHashMap<>();
         this.bizId2UserId2ChannelsMap = new ConcurrentHashMap<>();
         this.bizId2Tag2ChannelsMap = new ConcurrentHashMap<>();
@@ -83,7 +70,6 @@ public class LocalChannelManager {
     public void addChannel(Channel channel) {
         var bizId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID)).get();
         var userId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID)).get();
-        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM)).get();
         var tags = (List<String>) channel.attr(AttributeKey.valueOf(ChannelBaseConst.TAGS)).get();
 
         var channelId = ChannelUtil.getId(channel);
@@ -94,19 +80,8 @@ public class LocalChannelManager {
                 this.buildKey(bizId, userId),
                 s -> new CopyOnWriteArraySet<>()
         ).add(channel);
-        bizIdAndPlatform2ChannelsMap.computeIfAbsent(
-                this.buildKey(bizId, platform.name()),
-                s -> new CopyOnWriteArraySet<>()
-        ).add(channel);
-        bizIdAndUserIdAndPlatform2ChannelsMap.computeIfAbsent(
-                this.buildKey(bizId, userId, platform.name()),
-                s -> new CopyOnWriteArraySet<>()
-        ).add(channel);
         bizId2UserId2ChannelsMap.computeIfAbsent(bizId, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(userId, s -> new CopyOnWriteArraySet<>())
-                .add(channel);
-        bizId2Platform2ChannelsMap.computeIfAbsent(bizId, k -> new ConcurrentHashMap<>())
-                .computeIfAbsent(platform.name(), s -> new CopyOnWriteArraySet<>())
                 .add(channel);
         tags.forEach(tag ->
                 bizId2Tag2ChannelsMap.computeIfAbsent(bizId, k -> new ConcurrentHashMap<>())
@@ -131,12 +106,6 @@ public class LocalChannelManager {
         this.removeChannel(channelSet, channel);
 
         channelSet = bizIdAndUserId2ChannelsMap.get(this.buildKey(bizId, userId));
-        this.removeChannel(channelSet, channel);
-
-        channelSet = bizIdAndPlatform2ChannelsMap.get(this.buildKey(bizId, platform.name()));
-        this.removeChannel(channelSet, channel);
-
-        channelSet = bizIdAndUserIdAndPlatform2ChannelsMap.get(this.buildKey(bizId, userId, platform.name()));
         this.removeChannel(channelSet, channel);
 
         var bizMap = bizId2UserId2ChannelsMap.get(bizId);

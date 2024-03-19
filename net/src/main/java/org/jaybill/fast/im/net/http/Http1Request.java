@@ -21,7 +21,7 @@ public class Http1Request implements BaseHttpRequest {
         this.headers = new HashMap<>();
         var originalHeaders = this.originalReq.headers();
         originalHeaders.forEach(header -> this.headers.put(header.getKey(), header.getValue()));
-        var uriComponent = UriUtil.parseUri(originalReq.uri());
+        var uriComponent = UriUtil.resolveUri(originalReq.uri());
         this.path = uriComponent.getPath();
         this.params = uriComponent.getParams();
         this.body = originalReq.content();

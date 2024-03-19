@@ -13,6 +13,8 @@ import org.jaybill.fast.im.connector.ws.evt.*;
 import org.jaybill.fast.im.connector.ws.message.Message;
 import org.jaybill.fast.im.connector.ws.strategy.AckPushStrategy;
 import org.jaybill.fast.im.connector.ws.strategy.PushStrategy;
+import org.jaybill.fast.im.net.spring.properties.ConnectorProperties;
+import org.jaybill.fast.im.net.util.UriUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,8 @@ public class DefaultChannelEvtHandler implements ChannelEvtHandler {
     private LocalChannelManager localChannelManager;
     @Autowired
     private ChannelManager remoteChannelManager;
+    @Autowired
+    private ConnectorProperties connectorProperties;
 
     @Override
     public void onlineEvt(OnlineEvt evt) {
@@ -36,7 +40,7 @@ public class DefaultChannelEvtHandler implements ChannelEvtHandler {
                         .bizId(evt.getBizId())
                         .userId(evt.getUserId()).build(),
                 ChannelUtil.getId(evt.getChannel()),
-                IpUtil.getLocalIp(),
+                UriUtil.buildServerAddress(IpUtil.getLocalIp(), connectorProperties.getHttpPort()),
                 DEFAULT_TTL_MINUTE);
         this.recordNextRenewalTimePoint(evt.getChannel());
     }

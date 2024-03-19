@@ -1,9 +1,7 @@
 package org.jaybill.fast.im.connector.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jaybill.fast.im.common.util.AssertUtil;
-import org.jaybill.fast.im.connector.controller.req.SimplePushReq;
-import org.jaybill.fast.im.connector.filter.AuthFilter;
+import org.jaybill.fast.im.connector.controller.filter.AuthFilter;
 import org.jaybill.fast.im.connector.ws.ChannelEvtHandler;
 import org.jaybill.fast.im.connector.ws.PushResult;
 import org.jaybill.fast.im.connector.ws.evt.PushEvt;
@@ -22,16 +20,13 @@ public class PushController {
     @Autowired
     private ChannelEvtHandler evtHandler;
 
+    /**
+     * Push to specify user. One user maybe has more than one channel.
+     */
     @Post
-    public PushResult push(@JsonBody SimplePushReq req, HttpContext ctx) {
-        AssertUtil.notNull(req);
-        AssertUtil.notNull(req.getUserId());
-        AssertUtil.notNull(req.getText());
-
+    public PushResult push(@JsonBody PushEvt evt, HttpContext ctx) {
         var bizId = AuthFilter.getBizId(ctx);
-        return evtHandler.pushEvt(PushEvt.builder()
-                        .bizId(bizId)
-                        .userId(req.getUserId())
-                        .message(req.getText()).build());
+        evt.setBizId(bizId); // force reset
+        return evtHandler.pushEvt(evt);
     }
 }

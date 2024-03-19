@@ -17,6 +17,5 @@ public class Evt {
     private String id;
     private String bizId;
     private String userId;
-    private PlatformEnum platform;
     private Channel channel;
 }

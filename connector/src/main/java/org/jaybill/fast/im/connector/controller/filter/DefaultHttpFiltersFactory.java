@@ -1,4 +1,4 @@
-package org.jaybill.fast.im.connector.filter;
+package org.jaybill.fast.im.connector.controller.filter;
 
 import org.jaybill.fast.im.net.http.HttpFilter;
 import org.jaybill.fast.im.net.spring.HttpFiltersFactory;

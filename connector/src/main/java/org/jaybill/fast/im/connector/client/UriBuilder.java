@@ -21,6 +21,12 @@ public class UriBuilder {
     }
 
     public UriBuilder address(String address) {
+        if (address.contains(":")) {
+            var items = address.split(":");
+            this.address = items[0];
+            this.port = Integer.parseInt(items[1]);
+            return this;
+        }
         this.address = address;
         return this;
     }

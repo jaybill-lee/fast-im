@@ -9,6 +9,9 @@ import org.jaybill.fast.im.net.http.Post;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Only for internal call.
+ */
 @Component
 @HttpEndpoint(path = "/local/push")
 public class LocalPushController {

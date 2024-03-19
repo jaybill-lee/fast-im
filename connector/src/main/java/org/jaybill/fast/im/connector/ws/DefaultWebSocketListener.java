@@ -6,7 +6,6 @@ import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.common.util.IdUtil;
 import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
-import org.jaybill.fast.im.connector.constant.enums.PlatformEnum;
 import org.jaybill.fast.im.connector.util.JwtUtil;
 import org.jaybill.fast.im.connector.ws.evt.HeartbeatEvt;
 import org.jaybill.fast.im.connector.ws.evt.OfflineEvt;
@@ -40,11 +39,6 @@ public class DefaultWebSocketListener implements WebSocketListener {
             var userIdAttr = channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID));
             userIdAttr.set(userId);
 
-            var platform0 = claims.get(ChannelBaseConst.PLATFORM, String.class);
-            var platform = PlatformEnum.fromName(platform0);
-            var platformAttr = channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM));
-            platformAttr.set(platform);
-
             var tags = claims.get(ChannelBaseConst.TAGS, List.class);
             var tagsAttr = channel.attr(AttributeKey.valueOf(ChannelBaseConst.TAGS));
             tagsAttr.set(tags);
@@ -61,7 +55,6 @@ public class DefaultWebSocketListener implements WebSocketListener {
         var channel = ctx.channel();
         var bizId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID)).get();
         var userId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID)).get();
-        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM)).get();
 
         // Notify listener to handle online evt.
         if (!channel.isActive()) {
@@ -74,7 +67,6 @@ public class DefaultWebSocketListener implements WebSocketListener {
                 .id(IdUtil.getUuid())
                 .bizId(bizId)
                 .userId(userId)
-                .platform(platform)
                 .channel(channel)
                 .build());
     }
@@ -90,12 +82,10 @@ public class DefaultWebSocketListener implements WebSocketListener {
         var channel = ctx.channel();
         var bizId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID)).get();
         var userId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID)).get();
-        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM)).get();
         evtHandler.heartbeatEvt(HeartbeatEvt.builder()
                 .id(IdUtil.getUuid())
                 .bizId(bizId)
                 .userId(userId)
-                .platform(platform)
                 .channel(channel)
                 .build());
     }
@@ -114,12 +104,10 @@ public class DefaultWebSocketListener implements WebSocketListener {
         }
         var bizId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID)).get();
         var userId = (String) channel.attr(AttributeKey.valueOf(ChannelBaseConst.USER_ID)).get();
-        var platform = (PlatformEnum) channel.attr(AttributeKey.valueOf(ChannelBaseConst.PLATFORM)).get();
         evtHandler.offlineEvt(OfflineEvt.builder()
                 .id(IdUtil.getUuid())
                 .bizId(bizId)
                 .userId(userId)
-                .platform(platform)
                 .channel(channel)
                 .build());
     }

@@ -14,7 +14,10 @@ import org.jaybill.fast.im.connector.ws.PushAck;
 import org.jaybill.fast.im.connector.ws.PushResult;
 import org.jaybill.fast.im.connector.ws.evt.AckEvt;
 import org.jaybill.fast.im.connector.ws.evt.InternalPushEvt;
+import org.jaybill.fast.im.net.spring.properties.ConnectorProperties;
+import org.jaybill.fast.im.net.util.UriUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -34,11 +37,16 @@ public class AckPushStrategy implements PushStrategy {
     private ChannelManager remoteChannelManager;
     @Autowired
     private ConnectorClient connectorClient;
+    @Autowired
+    private ConnectorProperties connectorProperties;
+    @Value("${ws.strategy.ack.default-timeout:30}")
+    private int defaultTimeoutSec;
 
     private final Map<String, CompletableFuture<PushAck>> pendingMessageFutureMap = new ConcurrentHashMap<>();
 
     @Override
     public PushResult push(InternalPushEvt evt) {
+        this.normalise(evt);
         var message = evt.getMessage();
         var id = message.getId();
 
@@ -65,13 +73,14 @@ public class AckPushStrategy implements PushStrategy {
         // 2.get all remote channels and push
         var httpFutureList = new ArrayList<CompletableFuture<PushResult>>();
         if (evt.isEnableRemotePush()) {
-            var channelId2ServerIpMap = remoteChannelManager.getServerIp(evt.getBizId(), evt.getUserId());
-            var serverIpSet = new HashSet<>(channelId2ServerIpMap.values());
-            serverIpSet.forEach(serverIp -> {
-                if (IpUtil.getLocalIp().equals(serverIp)) {
+            var channelId2ServerAddressMap = remoteChannelManager.getServerAddress(evt.getBizId(), evt.getUserId());
+            var serverAddressSet = new HashSet<>(channelId2ServerAddressMap.values());
+            serverAddressSet.forEach(serverAddress -> {
+                if (UriUtil.buildServerAddress(IpUtil.getLocalIp(),
+                        connectorProperties.getHttpPort()).equals(serverAddress)) {
                     return;
                 }
-                var httpFuture = connectorClient.localPush(serverIp, InternalPushEvt.builder()
+                var httpFuture = connectorClient.localPush(serverAddress, InternalPushEvt.builder()
                         .bizId(evt.getBizId())
                         .userId(evt.getUserId())
                         .message(message)
@@ -98,6 +107,13 @@ public class AckPushStrategy implements PushStrategy {
         if (future != null) {
             // success
             future.complete(new PushAck(ChannelUtil.getId(evt.getChannel()), id));
+        }
+    }
+
+    private void normalise(InternalPushEvt evt) {
+        if (evt.getTimeout() <= 0 || evt.getUnit() == null) {
+            evt.setTimeout(defaultTimeoutSec);
+            evt.setUnit(TimeUnit.SECONDS);
         }
     }
 }

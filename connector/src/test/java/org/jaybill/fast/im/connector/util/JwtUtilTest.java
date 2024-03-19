@@ -2,8 +2,8 @@ package org.jaybill.fast.im.connector.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
-import org.jaybill.fast.im.connector.constant.enums.PlatformEnum;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -11,19 +11,22 @@ import java.util.List;
 @Slf4j
 public class JwtUtilTest {
 
+    @Before
+    public void init() {
+        JwtUtil.loadCsmsFile("local");
+    }
+
     @Test
     public void testCreateToken_Decode() {
         var bizId = "testBizId";
         var userId = "testUserId";
-        var token = JwtUtil.createWebsocketToken(bizId, userId, PlatformEnum.Web, null);
+        var token = JwtUtil.createWebsocketToken(bizId, userId, null);
         log.info("token = {}", token);
         var claims = JwtUtil.parseToken(token);
         var actualBizId = claims.get(ChannelBaseConst.BIZ_ID, String.class);
         Assert.assertEquals(bizId, actualBizId);
         var actualUserId = claims.get(ChannelBaseConst.USER_ID, String.class);
         Assert.assertEquals(userId, actualUserId);
-        var actualPlatform = claims.get(ChannelBaseConst.PLATFORM, String.class);
-        Assert.assertEquals(PlatformEnum.Web.name(), actualPlatform);
         var actualTags = claims.get(ChannelBaseConst.TAGS, List.class);
         Assert.assertNotNull(actualTags);
         Assert.assertEquals(0, actualTags.size());

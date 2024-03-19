@@ -22,19 +22,19 @@ public class ChannelManager {
     }
 
     /**
-     * add (bizId+userId, (channelId, serverIp))
+     * add (bizId+userId, (channelId, ip:port))
      */
-    public void addChannel(ConnectionKey key, String channelId, String serverIp, int ttlMinutes) {
+    public void addChannel(ConnectionKey key, String channelId, String serverAddress, int ttlMinutes) {
         AssertUtil.notNull(key);
         var bizId = key.getBizId();
         var userId = key.getUserId();
         AssertUtil.notNull(bizId);
         AssertUtil.notNull(userId);
-        AssertUtil.isTrue(InetAddressValidator.getInstance().isValid(serverIp));
+        AssertUtil.isTrue(InetAddressValidator.getInstance().isValid(serverAddress));
 
-        log.debug("add channel, key={}, id:{}, ip={}", key, channelId, serverIp);
+        log.debug("add channel, key={}, id:{}, ip={}", key, channelId, serverAddress);
         var serverRedisKey = RedisKey.getUserConnectedServerKey(bizId, userId);
-        connection.sync().hset(serverRedisKey, channelId, serverIp);
+        connection.sync().hset(serverRedisKey, channelId, serverAddress);
         connection.sync().expire(serverRedisKey, Duration.ofMinutes(ttlMinutes));
     }
 
@@ -69,9 +69,9 @@ public class ChannelManager {
     }
 
     /**
-     * @return (channelId, serverIp)
+     * @return (channelId, serverIp:port)
      */
-    public Map<String, String> getServerIp(String bizId, String userId) {
+    public Map<String, String> getServerAddress(String bizId, String userId) {
         if (StringUtils.isAnyEmpty(bizId, userId)) {
             return Collections.emptyMap();
         }

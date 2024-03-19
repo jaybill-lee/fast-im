@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 public interface HttpFilter {
+
+    BeforeResult CONTINUED = BeforeResult.builder().continued(true).build();
+
     /**
      * Called before entering a method annotated by {@link HttpMethod}; <br/>
      * You can prevent the filter from continuing to execute by setting {@link BeforeResult#continued}=false,

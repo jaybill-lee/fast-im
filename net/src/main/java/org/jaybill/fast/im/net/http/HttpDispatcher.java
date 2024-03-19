@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadFactory;
 @Slf4j
 public class HttpDispatcher {
 
+    private static final String EMPTY_JSON = "{}";
     private final List<HttpFilter> filters = new CopyOnWriteArrayList<>();
     private final ThreadFactory threadFactory = Thread.ofVirtual().name("http-dispatcher-", 0).factory();
 
@@ -200,6 +201,7 @@ public class HttpDispatcher {
         var status = filterResult.status != null
                 ? filterResult.status
                 : HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        jsonBody = jsonBody != null ? jsonBody : EMPTY_JSON;
         res.response(status, null, Unpooled.wrappedBuffer(jsonBody.getBytes(StandardCharsets.UTF_8)));
     }
 

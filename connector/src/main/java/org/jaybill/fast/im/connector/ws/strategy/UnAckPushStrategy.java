@@ -10,6 +10,8 @@ import org.jaybill.fast.im.connector.client.ConnectorClient;
 import org.jaybill.fast.im.connector.ws.LocalChannelManager;
 import org.jaybill.fast.im.connector.ws.PushResult;
 import org.jaybill.fast.im.connector.ws.evt.InternalPushEvt;
+import org.jaybill.fast.im.net.spring.properties.ConnectorProperties;
+import org.jaybill.fast.im.net.util.UriUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +28,8 @@ public class UnAckPushStrategy implements PushStrategy {
     private ChannelManager remoteChannelManager;
     @Autowired
     private ConnectorClient connectorClient;
+    @Autowired
+    private ConnectorProperties connectorProperties;
 
     @Override
     public PushResult push(InternalPushEvt evt) {
@@ -48,13 +52,14 @@ public class UnAckPushStrategy implements PushStrategy {
 
         // 2.get all remote channels and push
         if (evt.isEnableRemotePush()) {
-            var channelId2ServerIpMap = remoteChannelManager.getServerIp(evt.getBizId(), evt.getUserId());
-            var serverIpSet = new HashSet<>(channelId2ServerIpMap.values());
-            serverIpSet.forEach(serverIp -> {
-                if (IpUtil.getLocalIp().equals(serverIp)) {
+            var channelId2ServerAddressMap = remoteChannelManager.getServerAddress(evt.getBizId(), evt.getUserId());
+            var serverAddressSet = new HashSet<>(channelId2ServerAddressMap.values());
+            serverAddressSet.forEach(serverAddress -> {
+                if (UriUtil.buildServerAddress(IpUtil.getLocalIp(),
+                        connectorProperties.getHttpPort()).equals(serverAddress)) {
                     return;
                 }
-                connectorClient.localPush(serverIp, InternalPushEvt.builder()
+                connectorClient.localPush(serverAddress, InternalPushEvt.builder()
                     .bizId(evt.getBizId())
                     .userId(evt.getUserId())
                     .message(message)

@@ -38,7 +38,7 @@ public class NettyBeanConfig implements ApplicationListener<ContextRefreshedEven
 
     @Bean(name = BEAN_NAME)
     public ServerBootstrap httpServerBootStrap(WebSocketProperties wsProperties,
-            WebSocketListener webSocketListener, @Autowired(required = false) HttpFiltersFactory httpFiltersFactory) {
+            @Autowired(required = false) WebSocketListener webSocketListener, @Autowired(required = false) HttpFiltersFactory httpFiltersFactory) {
         var bootstrap = new ServerBootstrap();
         var bossGroup = new NioEventLoopGroup(1);
         var workerGroup = new NioEventLoopGroup();

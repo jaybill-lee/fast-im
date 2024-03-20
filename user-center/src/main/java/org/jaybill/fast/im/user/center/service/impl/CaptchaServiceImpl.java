@@ -4,6 +4,7 @@ import com.google.code.kaptcha.Producer;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jaybill.fast.im.common.util.AssertUtil;
 import org.jaybill.fast.im.user.center.consts.RedisKey;
 import org.jaybill.fast.im.user.center.service.CaptchaService;
@@ -47,5 +48,19 @@ public class CaptchaServiceImpl implements CaptchaService {
         // bind id -> imageBase64
         redisConnection.sync().set(RedisKey.getCaptchaImage(id), text, new SetArgs().ex(Duration.ofMinutes(2)));
         return imageBase64;
+    }
+
+    @Override
+    public boolean validateText(String id, String text) {
+        if (StringUtils.isAnyBlank(id, text)) {
+            return false;
+        }
+
+        var key = RedisKey.getCaptchaImage(id);
+        var expectText = redisConnection.sync().get(key);
+        if (expectText != null) {
+            redisConnection.sync().del(key);
+        }
+        return text.equalsIgnoreCase(expectText);
     }
 }

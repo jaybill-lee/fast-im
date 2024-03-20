@@ -8,4 +8,12 @@ public interface CaptchaService {
      * @return image base64
      */
     String createCaptchaBase64(String id);
+
+    /**
+     * Validate captcha text, and delete it.
+     * @param id id
+     * @param text text
+     * @return match
+     */
+    boolean validateText(String id, String text);
 }

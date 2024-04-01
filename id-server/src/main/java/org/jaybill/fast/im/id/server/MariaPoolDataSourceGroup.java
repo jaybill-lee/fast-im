@@ -21,7 +21,11 @@ public class MariaPoolDataSourceGroup {
         dataSources.forEach(consumer);
     }
 
-    public MariaDbPoolDataSource get() {
-        return dataSources.get(0);
+    public MariaDbPoolDataSource get(long index) {
+        return dataSources.get((int) (index % dataSources.size()));
+    }
+
+    public int size() {
+        return dataSources.size();
     }
 }

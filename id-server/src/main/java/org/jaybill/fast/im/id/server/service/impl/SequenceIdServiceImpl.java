@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jaybill.fast.im.common.util.AssertUtil;
 import org.jaybill.fast.im.id.server.MariaPoolDataSourceGroup;
+import org.jaybill.fast.im.id.server.RedisKey;
 import org.jaybill.fast.im.id.server.dao.SequenceIdDao;
 import org.jaybill.fast.im.id.server.model.SequenceId;
 import org.jaybill.fast.im.id.server.service.SequenceIdService;
@@ -53,11 +54,12 @@ public class SequenceIdServiceImpl implements SequenceIdService {
 
     @Override
     public List<Pair<Long, Long>> allocate(String bizId, int size) {
-        var index = redisConnection.sync().incr("dsfbj");
+        var index = redisConnection.sync().incr(RedisKey.getIndex(bizId));
         var dataSource = dataSourceGroup.get(index);
         try (var connection = dataSource.getConnection()) {
             return sequenceIdDao.update(bizId, size, connection);
         } catch (SQLException e) {
+            log.error("allocate id error, bizId:{}, size:{}, e:", bizId, size, e);
             return Collections.emptyList();
         }
     }

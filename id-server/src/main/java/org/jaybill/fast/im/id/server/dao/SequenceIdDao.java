@@ -14,6 +14,11 @@ import java.util.List;
 @Component
 public class SequenceIdDao {
 
+    /**
+     * Insert a record, sequenceId.bizId is unique id.
+     * @param sequenceId model
+     * @param connection db connection
+     */
     public void insert(SequenceId sequenceId, Connection connection) {
         try {
             var statement = connection.prepareStatement(
@@ -29,6 +34,13 @@ public class SequenceIdDao {
         }
     }
 
+    /**
+     * update id
+     * @param bizId unique id
+     * @param size size
+     * @param connection db connection
+     * @return id range, including the head but not the tail
+     */
     public List<Pair<Long, Long>> update(String bizId, long size, Connection connection) {
         var resultList = new ArrayList<Pair<Long, Long>>();
         try {
@@ -82,8 +94,8 @@ public class SequenceIdDao {
                         resultList.add(Pair.of(newStartId, newStartId + remainingSize - 1));
                     }
                 }
-                connection.commit();
             }
+            connection.commit();
             return resultList;
         } catch (SQLException e) {
             log.error("update id error:", e);

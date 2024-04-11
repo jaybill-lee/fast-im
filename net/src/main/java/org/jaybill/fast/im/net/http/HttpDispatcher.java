@@ -75,6 +75,7 @@ public class HttpDispatcher {
             } catch (Throwable e) {
                 log.error("exec before filters error:", e);
                 res.response(HttpResponseStatus.INTERNAL_SERVER_ERROR, null, null);
+                return;
             }
         }
 

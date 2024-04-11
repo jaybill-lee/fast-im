@@ -27,21 +27,8 @@
 
         <dependency>
             <groupId>org.jaybill</groupId>
-            <artifactId>net-spring</artifactId>
+            <artifactId>common-web</artifactId>
             <version>${revision}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-gson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
         </dependency>
 
         <dependency>

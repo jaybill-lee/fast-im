@@ -1,6 +1,6 @@
 package org.jaybill.fast.im.connector.ws.strategy;
 
-import org.jaybill.fast.im.connector.util.SpringUtil;
+import org.jaybill.fast.im.common.web.util.SpringUtil;
 import org.jaybill.fast.im.connector.ws.PushResult;
 import org.jaybill.fast.im.connector.ws.evt.InternalPushEvt;
 

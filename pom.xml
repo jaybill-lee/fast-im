@@ -17,6 +17,7 @@
         <module>net-spring</module>
         <module>user-center</module>
         <module>id-server</module>
+        <module>common-web</module>
     </modules>
 
     <properties>

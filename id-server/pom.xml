@@ -20,12 +20,12 @@
     <dependencies>
         <dependency>
             <groupId>org.jaybill</groupId>
-            <artifactId>net-spring</artifactId>
+            <artifactId>common-cache</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>org.jaybill</groupId>
-            <artifactId>common-cache</artifactId>
+            <artifactId>common-web</artifactId>
             <version>${revision}</version>
         </dependency>
 

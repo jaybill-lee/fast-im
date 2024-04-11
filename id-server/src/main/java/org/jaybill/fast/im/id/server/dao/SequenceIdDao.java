@@ -22,12 +22,13 @@ public class SequenceIdDao {
     public void insert(SequenceId sequenceId, Connection connection) {
         try {
             var statement = connection.prepareStatement(
-                    "insert into sequence_id(biz_id, id, start_id, distance, increment) values (?, ?, ?, ?, ?)");
-            statement.setString(1, sequenceId.getBizId());
-            statement.setLong(2, sequenceId.getId());
-            statement.setLong(3, sequenceId.getStartId());
-            statement.setLong(4, sequenceId.getDistance());
-            statement.setLong(5, sequenceId.getIncrement());
+                    "insert into sequence_id(app, biz_id, id, start_id, distance, increment) values (?, ?, ?, ?, ?, ?)");
+            statement.setString(1, sequenceId.getApp());
+            statement.setString(2, sequenceId.getBizId());
+            statement.setLong(3, sequenceId.getId());
+            statement.setLong(4, sequenceId.getStartId());
+            statement.setLong(5, sequenceId.getDistance());
+            statement.setLong(6, sequenceId.getIncrement());
             statement.execute();
         } catch (SQLException e) {
             log.error("insert error, model:{}, e:", sequenceId, e);
@@ -36,19 +37,21 @@ public class SequenceIdDao {
 
     /**
      * update id
+     * @param app app
      * @param bizId unique id
      * @param size size
      * @param connection db connection
      * @return id range, including the head but not the tail
      */
-    public List<Pair<Long, Long>> update(String bizId, long size, Connection connection) {
+    public List<Pair<Long, Long>> update(String app, String bizId, long size, Connection connection) {
         var resultList = new ArrayList<Pair<Long, Long>>();
         try {
             connection.setAutoCommit(false);
             // 1. select for update
             var selectStmt = connection.prepareStatement(
-                    "select * from sequence_id where biz_id = ? for update");
+                    "select * from sequence_id where biz_id = ? and app = ? for update");
             selectStmt.setString(1, bizId);
+            selectStmt.setString(2, app);
             var resultSet = selectStmt.executeQuery();
             if (resultSet.next()) {
                 var id = resultSet.getLong("id");

@@ -32,8 +32,15 @@ public class SequenceIdServiceImpl implements SequenceIdService {
 
     @Override
     public void init(SequenceId sequenceId) {
+        AssertUtil.notNull(sequenceId);
+        AssertUtil.notNull(sequenceId.getApp());
+        AssertUtil.notNull(sequenceId.getBizId());
+        AssertUtil.notNull(sequenceId.getStartId());
+        AssertUtil.notNull(sequenceId.getDistance());
+        AssertUtil.notNull(sequenceId.getIncrement());
         AssertUtil.isTrue(sequenceId.getIncrement() >= sequenceId.getDistance() * dataSourceGroup.size());
-        AtomicInteger counter = new AtomicInteger(1);
+
+        AtomicInteger counter = new AtomicInteger(0);
         dataSourceGroup.consume(dataSource -> {
             try (Connection connection = dataSource.getConnection()) {
                 var model = new SequenceId();
@@ -53,11 +60,13 @@ public class SequenceIdServiceImpl implements SequenceIdService {
     }
 
     @Override
-    public List<Pair<Long, Long>> allocate(String bizId, int size) {
+    public List<Pair<Long, Long>> allocate(String app, String bizId, int size) {
+        AssertUtil.notNull(bizId);
+        AssertUtil.isTrue(size > 0 && size < 10000);
         var index = redisConnection.sync().incr(RedisKey.getIndex(bizId));
         var dataSource = dataSourceGroup.get(index);
         try (var connection = dataSource.getConnection()) {
-            return sequenceIdDao.update(bizId, size, connection);
+            return sequenceIdDao.update(app, bizId, size, connection);
         } catch (SQLException e) {
             log.error("allocate id error, bizId:{}, size:{}, e:", bizId, size, e);
             return Collections.emptyList();

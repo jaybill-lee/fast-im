@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @HttpMethod(HttpMethods.PUT)
 public @interface Put {
-    String path();
+    String path() default "";
 }

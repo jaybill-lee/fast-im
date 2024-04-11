@@ -12,6 +12,11 @@ import java.util.Date;
 public class SequenceId {
 
     /**
+     * app
+     */
+    private String app;
+
+    /**
      * business identify, unique
      */
     private String bizId;

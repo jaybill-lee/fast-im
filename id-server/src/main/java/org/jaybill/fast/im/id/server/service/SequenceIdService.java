@@ -11,6 +11,7 @@ public interface SequenceIdService {
      * Initialize sequenceId, which inserts a record into the database based on bizId.
      * If the record exists, ignore it. <br/>
      * <b>Required parameters:</b>
+     * <li>app</li>
      * <li>bizId</li>
      * <li>startId</li>
      * <li>distance</li>
@@ -20,9 +21,10 @@ public interface SequenceIdService {
 
     /**
      * allocate id
-     * @param bizId
-     * @param size
+     * @param app app
+     * @param bizId bizId
+     * @param size size
      * @return
      */
-    List<Pair<Long, Long>> allocate(String bizId, int size);
+    List<Pair<Long, Long>> allocate(String app, String bizId, int size);
 }

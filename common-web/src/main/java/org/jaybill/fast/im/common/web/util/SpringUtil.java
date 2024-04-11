@@ -1,13 +1,11 @@
-package org.jaybill.fast.im.connector.util;
+package org.jaybill.fast.im.common.web.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public class SpringUtil implements ApplicationContextAware {
 
     private static ApplicationContext ctx;
@@ -23,7 +21,7 @@ public class SpringUtil implements ApplicationContextAware {
         }
 
         for (String profile : profiles) {
-            JwtUtil.loadCsmsFile(profile);
+            JwtParseUtil.loadCsmsFile(profile);
         }
     }
 

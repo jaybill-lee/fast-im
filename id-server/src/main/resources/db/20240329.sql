@@ -1,5 +1,6 @@
 CREATE TABLE `sequence_id` (
   `biz_id` VARCHAR(50) NOT NULL,
+  `app` VARCHAR(50) NOT NULL,
   `id` BIGINT NOT NULL,
   `start_id` BIGINT NOT NULL,
   `distance` BIGINT NOT NULL,

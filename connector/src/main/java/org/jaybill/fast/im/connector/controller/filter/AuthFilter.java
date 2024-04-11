@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.jaybill.fast.im.common.web.util.JwtParseUtil;
 import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
 import org.jaybill.fast.im.connector.util.JwtUtil;
 import org.jaybill.fast.im.net.http.BaseHttpRequest;
@@ -18,9 +19,9 @@ public class AuthFilter implements HttpFilter  {
     @Override
     public BeforeResult before(BaseHttpRequest req, HttpContext ctx) {
         Claims claims;
-        var token = req.header(JwtUtil.AUTHORIZATION);
+        var token = req.header(JwtParseUtil.AUTHORIZATION);
         try {
-            claims = JwtUtil.parseToken(token);
+            claims = JwtParseUtil.parseToken(token);
         } catch (JwtException e) {
             log.error("jwt parse error, uri:{}, e:", req.path(), e);
             return HttpFilter.BeforeResult.builder()

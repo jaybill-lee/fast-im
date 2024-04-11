@@ -8,6 +8,7 @@ import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.Method;
 import org.jaybill.fast.im.common.util.JsonUtil;
+import org.jaybill.fast.im.common.web.util.JwtParseUtil;
 import org.jaybill.fast.im.connector.util.JwtUtil;
 import org.jaybill.fast.im.connector.ws.PushResult;
 import org.jaybill.fast.im.connector.ws.evt.InternalPushEvt;
@@ -40,7 +41,7 @@ public class ConnectorClient {
                 .address(serverAddress)
                 .path("/local/push")
                 .build());
-        req.setHeader(JwtUtil.AUTHORIZATION,JwtUtil.BEARER + JwtUtil.createInternalServiceToken());
+        req.setHeader(JwtParseUtil.AUTHORIZATION, JwtParseUtil.BEARER + JwtUtil.createInternalServiceToken());
         req.setBody(JsonUtil.toJson(pushEvt), ContentType.APPLICATION_JSON);
         var ctx = new HttpClientContext();
         httpAsyncClient.execute(req, new DefaultFutureCallback<>(req, ctx, future) {

@@ -6,7 +6,7 @@ import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.jaybill.fast.im.common.util.IdUtil;
 import org.jaybill.fast.im.connector.constant.ChannelBaseConst;
-import org.jaybill.fast.im.connector.util.JwtUtil;
+import org.jaybill.fast.im.common.web.util.JwtParseUtil;
 import org.jaybill.fast.im.connector.ws.evt.HeartbeatEvt;
 import org.jaybill.fast.im.connector.ws.evt.OfflineEvt;
 import org.jaybill.fast.im.connector.ws.evt.OnlineEvt;
@@ -25,12 +25,12 @@ public class DefaultWebSocketListener implements WebSocketListener {
 
     @Override
     public boolean beforeHandshake(ChannelHandlerContext ctx, HttpMessage req) {
-        var token = req.headers().get(JwtUtil.AUTHORIZATION);
+        var token = req.headers().get(JwtParseUtil.AUTHORIZATION);
         try {
             var channel = ctx.channel();
             channel.attr(AttributeKey.valueOf(ChannelBaseConst.CHANNEL_ID)).setIfAbsent(IdUtil.getUuid());
 
-            var claims = JwtUtil.parseToken(token);
+            var claims = JwtParseUtil.parseToken(token);
             var bizId = claims.get(ChannelBaseConst.BIZ_ID, String.class);
             var bizIdAttr = channel.attr(AttributeKey.valueOf(ChannelBaseConst.BIZ_ID));
             bizIdAttr.set(bizId);
